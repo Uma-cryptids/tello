@@ -28,11 +28,11 @@ class key_controle:
 drone = tello.Tello()
 drone.connect()
 key = key_controle()
-drone.takeoff()
 while True:
     try:
         movement = key.get_key()
-        drone.send_rc_control(movement)
+        drone.send_rc_control(*movement)
+        print(movement)
     except:
         break
     sleep(0.1)
