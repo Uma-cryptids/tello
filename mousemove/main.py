@@ -1,6 +1,7 @@
 import keyboard
 from djitellopy import tello
 from time import sleep
+import cv2
 
 
 class key_controle:
@@ -28,7 +29,15 @@ class key_controle:
 drone = tello.Tello()
 drone.connect()
 key = key_controle()
+drone.streamon()
+print(drone.get_battery())
+
+drone.takeoff()
+
 while True:
+    img = drone.get_frame_read().frame
+    img = cv2.resize(img, (360, 240))
+    cv2.imshow("Image", img)
     try:
         movement = key.get_key()
         drone.send_rc_control(*movement)
