@@ -12,13 +12,16 @@ class Drone:
         self.cnt = 0
         self.last = ""
         self.lasttime = time.time()
+        self.flag = True
 
     def enter(self, key: str):
         if key != self.last:
             self.cnt = 0
 
-        if time.time() - self.lasttime > 1.0:
+        if time.time() - self.lasttime > 0.2:
             self.cnt = 0
+
+        self.flag = True
 
         if key == "w":
             self.speed[0] = int(self.MAX*(1 - math.exp(self.TAU*self.cnt)))
@@ -32,13 +35,20 @@ class Drone:
             self.speed[2] = int(self.MAX*(1 - math.exp(self.TAU*self.cnt)))
         elif key == "x":
             self.speed[2] = int(self.MAX*(math.exp(self.TAU*self.cnt) - 1))
+        elif key == "Right":
+            self.speed[3] = int(self.MAX*(1 - math.exp(self.TAU*self.cnt)))
+        elif key == "Left":
+            self.speed[3] = int(self.MAX*(math.exp(self.TAU*self.cnt) - 1))
 
         self.last = key
         self.lasttime = time.time()
         self.cnt += 1
 
     def free(self):
-        self.speed = [0, 0, 0, 0]
+        if self.flag:
+            self.speed = [0, 0, 0, 0]
+        else:
+            self.flag = True
 
 
 class Operator(tk.Frame):
