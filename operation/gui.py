@@ -5,27 +5,29 @@ import time
 
 
 class Drone:
-    MAX = 50
+    MAX = 60
     TAU = -0.05
+    DELTA = 0.05
 
-    def __init__(self, drone):
+    def __init__(self):
         self.speed = [0, 0, 0, 0]
+        self.position = [0.0, 0.0, 0.0, 0.0]
         self.cnt = 0
         self.last = ""
         self.lasttime = time.time()
         self.flag = True
         self.liftoff = False
-        self.drone = drone
-        self.drone.connect()
+        # self.drone = drone
+        # self.drone.connect()
 
     def enter(self, key: str):
-
+        
         if key == "q":
             if not self.liftoff:
-                self.drone.takeoff()
+                # self.drone.takeoff()
                 self.liftoff = True
             else:
-                self.drone.land()
+                # self.drone.land()
                 self.liftoff = False
 
         if self.liftoff:
@@ -54,7 +56,10 @@ class Drone:
             elif key == "Left":
                 self.speed[3] = int(self.MAX*(math.exp(self.TAU*self.cnt) - 1))
 
-            self.drone.send_rc_control(*self.speed)
+            self.position = list(
+                map(lambda x, y: x+y*self.DELTA, self.position, self.speed))
+
+            # self.drone.send_rc_control(*self.speed)
 
         self.last = key
         self.lasttime = time.time()
@@ -66,6 +71,12 @@ class Drone:
         else:
             self.flag = True
 
+    def positionstr(self):
+        return str(list(map(round, self.position, [2]*len(self.position))))
+
+    def battery(self):
+        return 100
+
 
 class Operator(tk.Frame):
     def __init__(self, parent, drone):
@@ -74,18 +85,26 @@ class Operator(tk.Frame):
         self.parent = parent
         self.tello = drone
 
+        self.battery_label = tk.Label(
+            self, text="battery: "+str(self.tello.battery()), width=50)
+        self.battery_label.pack(fill="both", padx=10, pady=10)
+
         self.takeofflabel = tk.Label(self, text="landing", width=50)
         self.takeofflabel.pack(fill="both", padx=10, pady=10)
 
-        self.label = tk.Label(self, text="speed: " +
-                              str(self.tello.speed), width=50)
-        self.label.pack(fill="both", padx=10, pady=10)
+        self.speedlabel = tk.Label(self, text="speed: " +
+                                   str(self.tello.speed), width=50)
+        self.speedlabel.pack(fill="both", padx=10, pady=10)
 
-        self.label.bind("<KeyPress>", self.press)
-        self.label.bind("<KeyRelease>", self.release)
+        self.positionlabel = tk.Label(
+            self, text="position: "+self.tello.positionstr(), width=50)
+        self.positionlabel.pack(fill="both", padx=10, pady=10)
 
-        self.label.focus_set()
-        self.label.bind("<1>", lambda event: self.label.focus_set())
+        self.speedlabel.bind("<KeyPress>", self.press)
+        self.speedlabel.bind("<KeyRelease>", self.release)
+
+        self.speedlabel.focus_set()
+        self.speedlabel.bind("<1>", lambda event: self.speedlabel.focus_set())
 
     def press(self, event):
         self.tello.enter(event.keysym)
@@ -93,15 +112,21 @@ class Operator(tk.Frame):
             self.takeofflabel.configure(text="takeoff")
         else:
             self.takeofflabel.configure(text="landing")
-        self.label.configure(text="speed: "+str(self.tello.speed))
+        self.battery_label.configure(
+            text="battery: "+str(self.tello.battery()))
+        self.positionlabel.configure(text="position: "+self.tello.positionstr())
+        self.speedlabel.configure(text="speed: "+str(self.tello.speed))
 
     def release(self, _event):
         self.tello.free()
-        self.label.configure(text="speed: "+str(self.tello.speed))
+        self.battery_label.configure(
+            text="battery: "+str(self.tello.battery()))
+        self.positionlabel.configure(text="position: "+self.tello.positionstr())
+        self.speedlabel.configure(text="speed: "+str(self.tello.speed))
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    mytello = Drone(tello.Tello())
+    mytello = Drone()
     Operator(root, mytello).pack(fill="both", expand=True)
     root.mainloop()
