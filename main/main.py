@@ -19,7 +19,7 @@ class face_detection:
         imgGray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         self.faces = self.detector.detectMultiScale(imgGray, 1.1, 4)
         for (x, y, w, h) in self.faces:
-            cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            cv2.rectangle(img, (x, y), (x+w, y+h), (60, 169, 181), 1)
         return (len(self.faces), img)
 
     def drone_detect(self):
