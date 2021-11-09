@@ -151,8 +151,6 @@ if __name__ == "__main__":
     drone = Drone(tello_access)
     drone.drone.streamon()
     Operator(root, drone).pack(fill="both", expand=True)
-    thread1 = threading.Thread(target=detection, args=(drone,))
-    thread1.start()
     root.mainloop()
     stop = True
     drone.drone.streamoff()

@@ -1,7 +1,6 @@
 from djitellopy import tello
 from math import exp, floor
 from threading import Thread
-from PIL import Image, ImageTk, ImageOps
 import cv2
 from time import time
 import tkinter as tk
@@ -39,12 +38,13 @@ class Drone_Contoroler:
         drone.streamon()
 
         self.speed = [0.0, 0.0, 0.0, 0.0]
-        self.cnt = 0, self.last_input = ""
+        self.cnt = 0
+        self.last_input = ""
         self.last_time = time()
-        self.is_liftoff = False
+        self.liftoff = False
 
     def __str__(self):
-        return "".join(round(self.speed[i], 2) for i in range(len(self.speed)))
+        return "".join(str(round(self.speed[i], 2)) for i in range(len(self.speed)))
 
     def speed_calculate(self, t: int):
         return int(floor(self.MAX*(1-exp(self.TAU*t))))
@@ -101,10 +101,7 @@ class Operator(tk.Frame):
 
         self.detection_txt = str(dnum)+"-person detection"
         self.detection_label = tk.Label(self, text=self.battery_txt, width=50)
-        self.battery_label.pack(fill="both", pady=10)
-
-        self.canvas = tk.Canvas(self.master)
-        self.canvas.create_image(320, 180, image=img)
+        self.detection_label.pack(fill="both", pady=10)
 
         self.takeoff_txt = "landing"
         self.takeoff_label = tk.Label(self, text=self.takeoff_txt, width=50)
@@ -121,6 +118,8 @@ class Operator(tk.Frame):
         self.speed_label.bind("<1>", lambda event: self.label.focus_set())
 
     def press(self, event):
+        global dnum
+
         self.controler.enter(event.keysym)
 
         if self.controler.liftoff:
@@ -135,8 +134,13 @@ class Operator(tk.Frame):
         self.speed_txt = "speed: "+str(self.controler)
         self.speed_label.configure(text=self.speed_txt)
 
+        self.detection_txt = str(dnum)+"-person detection"
+        self.detection_label.configure(text=self.detection_txt)
+
     def release(self, _event):
-        self.tello.free()
+        global dnum
+
+        self.controler.free()
 
         self.battery_txt = "battery: "+str(self.controler.get_battery())+"%"
         self.battery_label.configure(text=self.battery_txt)
@@ -144,22 +148,24 @@ class Operator(tk.Frame):
         self.speed_txt = "speed: "+str(self.controler)
         self.speed_label.configure(text=self.speed_txt)
 
+        self.detection_txt = str(dnum)+"-person detection"
+        self.detection_label.configure(text=self.detection_txt)
 
-def detection():
-    global stop, drone, img, dnum
+
+def detection(detect_drone):
+    global stop, dnum
     detector = face_detection()
+    detector.set_drone(detect_drone)
     while True:
-        dnum, cv_img = detector.drone_detect()
-        cv_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-        pil_image = Image.fromarray(cv_image)
-        pil_image = ImageOps.pad(pil_image, (640, 360))
-        img = ImageTk.PhotoImage(image=pil_image)
+        dnum, img = detector.drone_detect()
+        cv2.imshow("Result", img)
+        cv2.waitKey(1)
         if stop:
             break
 
 
 if __name__ == "__main__":
-    global stop, drone, img, dnum
+    global stop, drone, dnum
     stop = False
     drone = tello.Tello()
     dnum = 0
@@ -167,10 +173,9 @@ if __name__ == "__main__":
     drone_contoroler = Drone_Contoroler()
     drone.streamon()
     Operator(root).pack(fill="both", expand=True)
+    thread1 = Thread(target=detection)
+    thread1.start()
 
-    thread = Thread(target=detection)
-
-    thread.start()
     root.mainloop()
 
     stop = True
