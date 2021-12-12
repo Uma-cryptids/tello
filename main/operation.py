@@ -78,6 +78,10 @@ class Operator(tk.Frame):
         self.takeofflabel = tk.Label(self, text="landing", width=50)
         self.takeofflabel.pack(fill="both", padx=10, pady=10)
 
+        self.detection_txt = str(0)+"-person detection"
+        self.detection_label = tk.Label(self, text=self.detection_txt, width=50)
+        self.detection_label.pack(fill="both", pady=10)
+
         self.label = tk.Label(self, text="speed: " +
                               str(self.tello.speed), width=50)
         self.label.pack(fill="both", padx=10, pady=10)

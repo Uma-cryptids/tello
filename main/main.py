@@ -138,7 +138,7 @@ class Operator(tk.Frame):
         self.battery_label.pack(fill="both", pady=10)
 
         self.detection_txt = str(DNUM)+"-person detection"
-        self.detection_label = tk.Label(self, text=self.battery_txt, width=50)
+        self.detection_label = tk.Label(self, text=self.detection_txt, width=50)
         self.detection_label.pack(fill="both", pady=10)
 
         self.takeoff_txt = "landing"
